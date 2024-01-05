@@ -37,6 +37,10 @@
 
 -- COMMAND ----------
 
+
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-082bfa19-8e4e-49f7-bd5d-cd833c471109
 -- MAGIC %md
 -- MAGIC
@@ -101,12 +105,24 @@
 
 -- COMMAND ----------
 
+select * from events
+
+-- COMMAND ----------
+
 -- TODO
-CREATE OR REPLACE TEMP VIEW events_pivot
-<FILL_IN>
+CREATE OR REPLACE TEMP VIEW events_pivot AS
+SELECT * FROM (
+    SELECT user_id as user, event_name FROM events)
+    PIVOT (
+    count(*) FOR event_name in
 ("cart", "pillows", "login", "main", "careers", "guest", "faq", "down", "warranty", "finalize", 
 "register", "shipping_info", "checkout", "mattresses", "add_item", "press", "email_coupon", 
 "cc_info", "foam", "reviews", "original", "delivery", "premium")
+)
+
+-- COMMAND ----------
+
+select * from events_pivot
 
 -- COMMAND ----------
 
@@ -119,9 +135,11 @@ CREATE OR REPLACE TEMP VIEW events_pivot
 
 -- MAGIC %python
 -- MAGIC # TODO
--- MAGIC (spark.read
--- MAGIC     <FILL_IN>
--- MAGIC     .createOrReplaceTempView("events_pivot"))
+-- MAGIC (spark.read.table("events").groupBy("user_id").pivot("event_name").count().withColumnRenamed("user_id", "user").createOrReplaceTempView("events_pivot"))
+
+-- COMMAND ----------
+
+select * from events_pivot
 
 -- COMMAND ----------
 
@@ -181,8 +199,12 @@ CREATE OR REPLACE TEMP VIEW events_pivot
 -- COMMAND ----------
 
 -- TODO
-CREATE OR REPLACE TEMP VIEW clickpaths AS
-<FILL_IN>
+-- CREATE OR REPLACE TEMP VIEW clickpaths AS
+SELECT * from events_pivot e
+LEFT JOIN transactions t
+ON e.user = t.user_id
+
+
 
 -- COMMAND ----------
 
@@ -194,10 +216,20 @@ CREATE OR REPLACE TEMP VIEW clickpaths AS
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC # TODO
--- MAGIC (spark.read
--- MAGIC     <FILL_IN>
--- MAGIC     .createOrReplaceTempView("clickpaths"))
+-- MAGIC # Load the 'events_pivot' table as a DataFrame
+-- MAGIC events_pivot = spark.read.table("events_pivot")
+-- MAGIC transactions = spark.read.table("transactions")
+-- MAGIC
+-- MAGIC # Perform the join between 'events_pivot' and 'transactions'
+-- MAGIC joined_df = (events_pivot
+-- MAGIC              .join(transactions, events_pivot.user == transactions.user_id, "inner"))
+-- MAGIC
+-- MAGIC # Create a temporary view from the joined DataFrame
+-- MAGIC joined_df.createOrReplaceTempView("clickpaths")
+
+-- COMMAND ----------
+
+select * from clickpaths
 
 -- COMMAND ----------
 

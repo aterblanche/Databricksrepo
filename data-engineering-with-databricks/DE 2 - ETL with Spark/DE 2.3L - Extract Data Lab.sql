@@ -73,8 +73,18 @@
 
 -- COMMAND ----------
 
+SELECT * FROM JSON.`${DA.paths.kafka_events}`
+
+-- COMMAND ----------
+
 -- TODO
-<FILL_IN> "${DA.paths.kafka_events}" 
+CREATE TABLE IF NOT EXISTS events_json
+    (key BINARY, offset LONG, partition INTEGER, timestamp LONG, topic STRING, value BINARY) using JSON
+    Location "${DA.paths.kafka_events}" 
+
+-- COMMAND ----------
+
+SELECT * FROM events_json
 
 -- COMMAND ----------
 
